@@ -1,29 +1,50 @@
 import cv2
 import numpy
 
-#Load the source image
-src = cv2.imread("lena.png")
+src = cv2.imread("lena.png", 0)
 
-rows, cols, c = src.shape
-# x1 = x + y · Bx
-# y1 = y + x · By
-Bx = 0.0
-By = 0.5
+#Forward mapping method
+def forMap (img, Bx, By):
+    rows, cols = img.shape
+    #Canvas ensuring correct window size
+    imgForward = numpy.ndarray(shape = (int (rows + cols*abs(By)), int (cols + rows*abs(Bx))))
 
-n = 1/(1-Bx*By)
-#applying the forward mapping (shape = y-values, x-values, channel)
-imgForward = numpy.ndarray(shape = (int (cols + rows*By), int (rows + cols*Bx), 3))
-#shape should be equal to src.shape, then do np.pad (add extra room depending on the shearing factors)
-imgBackward = numpy.ndarray(shape = (int (cols + rows*By), int (rows + cols*Bx), 3))
+    #For loops to go through all rows and collums
+    for row in range(rows):
+        for col in range(cols):
+            #Apply the forward mapping algorithm
+            fCol = int (col+row*Bx)
+            fRow = int (row+col*By)
+            imgForward[fRow, fCol] = img[row,col]/255
 
-#for loops creating new sheared image (forward mapping)
-for row in range(rows):
-    for col in range(cols):
-        imgForward[int (row+col*By), int(col+row*Bx)] = src[row,col]/255
-        imgBackward[int (n*(row+col*-By)), int (n*(col+row*-Bx))] = src[row, col]/255
+    return imgForward
 
-#1*3 array instead of 1*2 array
-cv2.imshow("Forward mapping", imgForward)
-cv2.imshow("Backward mapping", imgBackward)
+#Backward mapping method
+def backMap (img, Bx, By):
+    rows, cols = img.shape
+    #Canvas ensuring correct window size in accordance to the img.shape parameters
+    imgBackward = numpy.ndarray(shape = img.shape)
+    n = int(1/(1-Bx*By))
+
+    #For loops to go through all rows and collums
+    for row in range(rows):
+        for col in range(cols):
+            #Apply the backward mapping algorithm
+            bCol = int(n*(col+row*-Bx))
+            bRow = int(n*(row+col*-By))
+            imgBackward[bRow, bCol] = img[row, col]
+
+    return imgBackward
+
+#Shearing factors
+Bx = 0.3
+By = 0.2
+
+ForMapping = forMap(src, Bx, By)
+BackMapping = backMap(ForMapping, Bx, By)
+
+cv2.imshow("Original", src)
+cv2.imshow("Forward mapped", ForMapping)
+cv2.imshow("Backward mapped", BackMapping)
 
 cv2.waitKey(0)
