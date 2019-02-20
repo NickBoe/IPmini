@@ -2,38 +2,43 @@ import cv2
 import math
 import numpy as np
 
+
 class Rotate:
-    #Image import
+    # Image import
     src = cv2.imread('lena.png', 0)
     rows, cols = src.shape
 
-    #Rotation angle in radians
-    angle = 22.5
-    rad = angle * float(math.pi / 180)
+    # Show original/source image
+    cv2.imshow('Original', src)
+
+    # Rotation angle
+    angle = 30
+    q = angle * float(math.pi / 180)
 
     # Rotation point
-    x = 50
-    y = 40
+    x = 256
+    y = 56
 
     # Forward mapping function
-    def forMap(self, x, y, rad):
+    def forMap(img, x, y, q):
 
-        rows, cols = self.shape
+        rows, cols = img.shape
         imgForward = np.zeros(shape=(int(rows), int(cols)), dtype=np.uint8)
 
         for row in range(rows):
             for col in range(cols):
-                fCol = int(((col - x) * math.cos(rad)) - ((row - y) * math.sin(rad)) + x)
-                fRow = int(((col - x) * math.sin(rad)) + ((row - y) * math.cos(rad)) + y)
+                fRow = int((col - x) * math.sin(q) + (row - y) * math.cos(q) + y)
+                fCol = int((col - x) * math.cos(q) - (row - y) * math.sin(q) + x)
 
-                if fCol < cols and fRow < rows and fCol > 0 and fRow > 0:
-                    imgForward[fRow, fCol] = self[row, col]
+                if 0 < fRow < rows and 0 < fCol < cols:
+                    imgForward[fRow, fCol] = img[row, col]
                 else:
                     pass
 
         return imgForward
 
-    ForMapping = forMap(src, x, y, rad)
+    # Show forward mapping
+    ForMapping = forMap(src, x, y, q)
     cv2.imshow("Forward mapped", ForMapping)
 
     # Backward mapping function
@@ -43,24 +48,23 @@ class Rotate:
 
         for row in range(self.rows):
             for col in range(self.cols):
-                bCol = int(((col - self.x) * math.cos(self.rad) + (row - self.y) * math.sin(self.rad))+self.x)
-                bRow = int((-(col - self.x) * math.sin(self.rad) + (row - self.y) * math.cos(self.rad))+self.y)
+                bRow = int(-math.sin(self.q) * (col - self.x) + math.cos(self.q) * (row - self.y) + self.y)
+                bCol = int(math.cos(self.q) * (col - self.x) + math.sin(self.q) * (row - self.y) + self.x)
 
-                if bCol < self.cols and bRow < self.rows and bCol > 0 and bRow > 0:
+                if 0 < bRow < self.rows and 0 < bCol < self.cols:
                     imgBackward[row, col] = self.src[bRow, bCol]
                 else:
                     pass
 
         return imgBackward
 
-    def showImage(name, self):
-        cv2.imshow(name, self.src)
 
+# Show backward mapping
 def output():
-    Rotate.showImage('Original', Rotate)
     cv2.imshow('Backward Mapping', Rotate.backMap(Rotate, Rotate))
     cv2.waitKey(0)
     cv2.destroyAllWindows
+
 
 if __name__ == '__main__':
     output()
